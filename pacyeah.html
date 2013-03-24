@@ -26,23 +26,70 @@ onresize = function(event) {
 	canvas.height = body.clientHeight;
 }
 
-var x = canvas.width/2,
-	y = canvas.height/2,
+var w = canvas.width,
+	h = canvas.height,
+	x = w/2,
+	y = h/2,
 	angle = 45,
-	step = 4,
+	step = 8,
 	angle_direction = true,
+	pacman_moving = false,
 	pacman_direction = 0,
 	speed = 10,
-	enemies = [
-		[700, 100],
-		[500, 600],
-		[50, 300]
-	],
-	enemies_count = enemies.length,
-	pacman_radius = 50;
+	victims = [],
+	victims_count = 5,
+	pacman_radius = 22,
+	victim_radius = 20,
+	wall_w = victim_radius * 2,
+	walls = [],
+	walls_count = 10,
+	time = 0,
+	points = 0;
+
+function dist(x, y, xx, yy) {
+	return Math.sqrt((xx - x) * (xx - x) + (yy - y) * (yy - y));
+}
+
+function rect_in_rect(x, y, w, h, xx, yy, ww, hh)
+{
+	var rl = x, rt = y, rr = x + w, rb = y + h;
+	return (rl <= xx + ww) && (rr >= xx) && (rt <= yy + hh) && (rb >= yy);	
+}
+
+function circle_in_rect(x, y, r, xx, yy, w, h)
+{
+	// circle "is" rect x +- r, y +- r
+	var cl = x - r, ct = y - r, cr = x + r, cb = y + r;
+	return (cl <= xx + w) && (cr >= xx) && (ct <= yy + h) && (cb >= yy);
+}
+
+function rect_in_walls(x, y, w, h)
+{
+	for (var n in walls) {
+		if (rect_in_rect(x, y, w, h, walls[n][0], walls[n][1], walls[n][2], walls[n][3])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function is_free_place(x, y, m) {
+	for (var n in walls) {
+		if (circle_in_rect(x, y, victim_radius, walls[n][0], walls[n][1], walls[n][2], walls[n][3]))
+			return false;
+	}
+	if (m >= 0) {
+		for (var n in victims) {
+			if ((n != m) && dist(x, y, victims[n][0], victims[n][1]) < victim_radius * 2)
+				return false;
+		}
+	}
+	return true;
+}
 
 function tick() {
-	c.clearRect(0, 0, canvas.width, canvas.height);
+	w = canvas.width;
+	h = canvas.height;
 
 	// angle
 	if(angle < step + 1)
@@ -55,81 +102,178 @@ function tick() {
 	else
 		angle -= step; 
 
-	/* speed & pacman's direction */
+	/* pacman's direction & moving */
 
+	pacman_moving = false;
 	// left
 	if((keys[65] || keys[37]) && x >= 0) {
-		x -= speed;
 		pacman_direction = Math.PI;
+		pacman_moving = true;
 	}
 	// right
 	else if((keys[68] || keys[39]) && x <= canvas.width) {
-		x += speed;
 		pacman_direction = 0;
+		pacman_moving = true;
 	}
 	// top
 	if((keys[87] || keys[38]) && y >= 0) {
 		if(pacman_direction == Math.PI) {
-			y -= speed/2;
 			pacman_direction = Math.PI + Math.PI/4;
+			pacman_moving = true;
 		} else if(pacman_direction == 0) {
-			y -= speed/2;
 			pacman_direction = -Math.PI/4;
+			pacman_moving = true;
 		} else {
-			y -= speed;
 			pacman_direction = -Math.PI/2;
+			pacman_moving = true;
 		}
 	}
 	// down
 	else if((keys[83] || keys[40]) && y <= canvas.height) {
 		if(pacman_direction == Math.PI) {
-			y += speed/2;
 			pacman_direction = Math.PI/2 + Math.PI/4;
+			pacman_moving = true;
 		} else if(pacman_direction == 0) {
-			y += speed/2;
 			pacman_direction =  Math.PI/2 - Math.PI/4;
+			pacman_moving = true;
 		} else {
-			y += speed;
 			pacman_direction = Math.PI/2;
+			pacman_moving = true;
 		}
 	}
+	if (pacman_moving) {
+		x += Math.cos(pacman_direction) * speed;
+		y += Math.sin(pacman_direction) * speed;
+		if (!is_free_place(x, y, -1)) {
+			x -= Math.cos(pacman_direction) * speed;
+			y -= Math.sin(pacman_direction) * speed;
+		}
+		if (x < 0) x = 0; else if (x >= w) x = w;
+		if (y < 0) y = 0; else if (y >= h) y = h;		
+	}
 
-	// killing and drawing of enemies
-	for(var n in enemies) {
-		if(Math.abs(x - enemies[n][0]) < pacman_radius && Math.abs(y - enemies[n][1]) < pacman_radius)
-			enemies.splice(n, 1);
+	// killing and drawing of victims
+	for(var n in victims) {
+		if(Math.abs(x - victims[n][0]) < pacman_radius && Math.abs(y - victims[n][1]) < pacman_radius) {
+			victims.splice(n, 1);
+			points += Math.round(body.clientWidth * body.clientHeight / time);
+			time = 0;
+		}
 		else {
-			if(Math.round(Math.random()) && enemies[n][0] >= 0)
-				enemies[n][0] += -step;
-			else if(enemies[n][0] <= canvas.width)
-				enemies[n][0] += +step;
+			/*if(Math.round(Math.random()) && victims[n][0] >= 0)
+				victims[n][0] += -step;
+			else if(victims[n][0] <= canvas.width)
+				victims[n][0] += +step;
 
-			if(Math.round(Math.random()) && enemies[n][1] >= 0)
-				enemies[n][1] += -step;
-			else if(enemies[n][1] <= canvas.height)
-				enemies[n][1] += +step;
+			if(Math.round(Math.random()) && victims[n][1] >= 0)
+				victims[n][1] += -step;
+			else if(victims[n][1] <= canvas.height)
+				victims[n][1] += +step;*/
 
-			c.beginPath();
-			c.arc(enemies[n][0], enemies[n][1], 20, 0, 2 * Math.PI);
-			c.fillStyle = '#0AA';
-			c.fill();
-			c.stroke();
+			xx = victims[n][0];
+			yy = victims[n][1];
+			if (dist(x, y, xx, yy) < (pacman_radius * 4)) {
+				var dx = xx - x;
+				var dy = yy - y;
+				//victims[n][2] = Math.atan2(dx, dy); //
+				var a = victims[n][2];
+				var a2 = pacman_direction;	
+				var da = Math.abs(a - a2);			
+				if (a > Math.PI / 2)
+					if (pacman_moving) 					
+						victims[n][2] = pacman_direction + Math.random() * Math.PI * 0.2 - Math.random() * Math.PI * 0.2;
+					else 
+						// change the dir
+						victims[n][2] = Math.PI * 2 * Math.random();						
+			} else if (Math.random() < 0.1) {
+				victims[n][2] = Math.PI * 2 * Math.random();
+			}
+			xx += Math.cos(victims[n][2]) * step;
+			yy += Math.sin(victims[n][2]) * step;			
+			if (xx < -victim_radius) xx = w; else if (xx > w + victim_radius) xx = 0;
+			if (yy < -victim_radius) yy = h; else if (yy > h + victim_radius) yy = 0;
+			if (is_free_place(xx, yy, n)) {
+				victims[n][0] = xx;
+				victims[n][1] = yy;
+			} else {
+				// change the dir
+				victims[n][2] = Math.PI * 2 * Math.random();				
+			}
 		}
 	}
+
+	/* rendering */
+
+	c.fillStyle = '#1e1e1e';
+	c.fillRect(0, 0, canvas.width, canvas.height);
+
+	// walls
+	for (var n in walls) {
+		c.fillStyle = "#cc9944";
+		c.fillRect(walls[n][0], walls[n][1], walls[n][2], walls[n][3]);
+	}
+
+	// victims
+	for (var n in victims) {
+		c.beginPath();
+		c.arc(victims[n][0], victims[n][1], victim_radius, 0, 2 * Math.PI);
+		c.fillStyle = '#0AA';
+		c.fill();
+		//c.stroke();
+	}
+
+    // statusbar
+	c.font = '25pt monospace';
+	//c.fillStyle = '#000';
+	c.fillStyle = '#dddddd';
+	c.fillText(/*victims_count - */victims.length, 14, 40);
+
+	if (victims.length > 0)
+		time++;
+	else {
+		c.font = '25pt monospace';
+		//c.fillStyle = '#000';
+		c.fillStyle = '#eeeeee';
+		c.fillText(points + " points", w/2 - 30, h/2 - 12);
+	} 
 
 	// pacman
 	c.beginPath();
 	c.moveTo(x, y);
 	c.arc(x, y, pacman_radius, rads(angle) + pacman_direction, rads(-angle) + pacman_direction);
-	c.fillStyle = '#0A0';
+	if ((victims.length < victims_count) && (time <= 10))
+		c.fillStyle = '#66ff66';		
+	else
+		c.fillStyle = '#0A0';
 	c.fill();
 	c.closePath();
-	c.stroke();
-
-    // statusbar
-	c.font = '25pt monospaced';
-	c.fillStyle = '#000';
-	c.fillText(enemies_count - enemies.length, 14, 40);
+	//c.stroke();	
+}
+for (var n = 0; n < walls_count; n++) {
+	var xx = Math.random() * w;
+	var yy = Math.random() * h;
+	var ww;
+	var hh;
+	var l = Math.round(Math.random() * 10 + 1) * wall_w;
+	if (Math.random() < 0.5) {
+		ww = l; hh = wall_w;
+	} else {
+		ww = wall_w; hh = l;
+	}
+	while (rect_in_walls(xx, yy, ww, hh)) {
+		xx = Math.random() * w;
+		yy = Math.random() * h;		
+	}	
+	walls.push([xx, yy, l, wall_w]);
+}
+for(var n = 0; n < victims_count; n++) {
+	var xx = Math.random() * w;
+	var yy = Math.random() * h;
+	while (!is_free_place(xx, yy, n)) {
+		xx = Math.random() * w;
+		yy = Math.random() * h;		
+	}
+	victims.push([xx, yy, Math.random()]);
 }
 setInterval('tick()', 30);
 
