@@ -1,0 +1,137 @@
+<body>
+<canvas id = 'c'></canvas>
+<style>
+body {
+	margin: 0px;
+}
+</style>
+<script>
+
+function rads(x) { return Math.PI * x / 180 }
+
+var step = 20,
+	keys = [],
+	canvas = document.getElementById('c'),
+	body = document.getElementsByTagName('body')[0];
+
+canvas.width = body.clientWidth;
+canvas.height = body.clientHeight;
+c = canvas.getContext('2d');
+
+// events
+onkeydown = function(event) { keys[event.keyCode] = true }
+onkeyup = function(event) { keys[event.keyCode] = false }
+onresize = function(event) {
+	canvas.width = body.clientWidth;
+	canvas.height = body.clientHeight;
+}
+
+var x = canvas.width/2,
+	y = canvas.height/2,
+	angle = 45,
+	step = 4,
+	angle_direction = true,
+	pacman_direction = 0,
+	speed = 10,
+	enemies = [
+		[700, 100],
+		[500, 600],
+		[50, 300]
+	],
+	enemies_count = enemies.length,
+	pacman_radius = 50;
+
+function tick() {
+	c.clearRect(0, 0, canvas.width, canvas.height);
+
+	// angle
+	if(angle < step + 1)
+		angle_direction = true;
+	else if(angle > 45)
+		angle_direction = false;
+
+	if(angle_direction)
+		angle += step;
+	else
+		angle -= step; 
+
+	/* speed & pacman's direction */
+
+	// left
+	if((keys[65] || keys[37]) && x >= 0) {
+		x -= speed;
+		pacman_direction = Math.PI;
+	}
+	// right
+	else if((keys[68] || keys[39]) && x <= canvas.width) {
+		x += speed;
+		pacman_direction = 0;
+	}
+	// top
+	if((keys[87] || keys[38]) && y >= 0) {
+		if(pacman_direction == Math.PI) {
+			y -= speed/2;
+			pacman_direction = Math.PI + Math.PI/4;
+		} else if(pacman_direction == 0) {
+			y -= speed/2;
+			pacman_direction = -Math.PI/4;
+		} else {
+			y -= speed;
+			pacman_direction = -Math.PI/2;
+		}
+	}
+	// down
+	else if((keys[83] || keys[40]) && y <= canvas.height) {
+		if(pacman_direction == Math.PI) {
+			y += speed/2;
+			pacman_direction = Math.PI/2 + Math.PI/4;
+		} else if(pacman_direction == 0) {
+			y += speed/2;
+			pacman_direction =  Math.PI/2 - Math.PI/4;
+		} else {
+			y += speed;
+			pacman_direction = Math.PI/2;
+		}
+	}
+
+	// killing and drawing of enemies
+	for(var n in enemies) {
+		if(Math.abs(x - enemies[n][0]) < pacman_radius && Math.abs(y - enemies[n][1]) < pacman_radius)
+			enemies.splice(n, 1);
+		else {
+			if(Math.round(Math.random()) && enemies[n][0] >= 0)
+				enemies[n][0] += -step;
+			else if(enemies[n][0] <= canvas.width)
+				enemies[n][0] += +step;
+
+			if(Math.round(Math.random()) && enemies[n][1] >= 0)
+				enemies[n][1] += -step;
+			else if(enemies[n][1] <= canvas.height)
+				enemies[n][1] += +step;
+
+			c.beginPath();
+			c.arc(enemies[n][0], enemies[n][1], 20, 0, 2 * Math.PI);
+			c.fillStyle = '#0AA';
+			c.fill();
+			c.stroke();
+		}
+	}
+
+	// pacman
+	c.beginPath();
+	c.moveTo(x, y);
+	c.arc(x, y, pacman_radius, rads(angle) + pacman_direction, rads(-angle) + pacman_direction);
+	c.fillStyle = '#0A0';
+	c.fill();
+	c.closePath();
+	c.stroke();
+
+    // statusbar
+	c.font = '25pt monospaced';
+	c.fillStyle = '#000';
+	c.fillText(enemies_count - enemies.length, 14, 40);
+}
+setInterval('tick()', 30);
+
+</script>
+</body>
