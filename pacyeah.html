@@ -83,15 +83,23 @@ function is_free_place(x, y, itself) {
 			return false;
 	}
 	if (itself != pac) {
+		var isvictim = false;
+		var isenemy = false;
 		for (var n in victims) {
-			if ((victims[n] != itself) && dist(x, y, victims[n][0], victims[n][1]) < victim_radius * 2)
-				return false;
+			if (victims[n] != itself) {
+				if (dist(x, y, victims[n][0], victims[n][1]) < victim_radius * 2)
+					return false;
+			} else 
+				isvictim = true;
 		}
 		for (var n in enemies) {
-			if ((enemies[n] != itself) && dist(x, y, enemies[n][0], enemies[n][1]) < enemy_radius * 2)
-				return false;
+			if (enemies[n] != itself) {
+				if (dist(x, y, enemies[n][0], enemies[n][1]) < enemy_radius * 2)
+					return false;
+			} else 
+				isenemy = true;
 		}
-		if (dist(x, y, pac_x, pac_y) < victim_radius + pac_radius) 
+		if (isvictim && dist(x, y, pac_x, pac_y) < victim_radius + pac_radius) 
 			return false;
 	}
 	return true;
