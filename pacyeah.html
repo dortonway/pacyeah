@@ -85,6 +85,7 @@ function is_free_place(x, y, itself) {
 	if (itself != pac) {
 		var isvictim = false;
 		var isenemy = false;
+		// check for victims
 		for (var n in victims) {
 			if (victims[n] != itself) {
 				if (dist(x, y, victims[n][0], victims[n][1]) < victim_radius * 2)
@@ -92,6 +93,7 @@ function is_free_place(x, y, itself) {
 			} else 
 				isvictim = true;
 		}
+		// check for enemies
 		for (var n in enemies) {
 			if (enemies[n] != itself) {
 				if (dist(x, y, enemies[n][0], enemies[n][1]) < enemy_radius * 2)
@@ -99,6 +101,7 @@ function is_free_place(x, y, itself) {
 			} else 
 				isenemy = true;
 		}
+		// if victim - check for pacman
 		if (isvictim && dist(x, y, pac_x, pac_y) < victim_radius + pac_radius) 
 			return false;
 	}
@@ -119,11 +122,10 @@ function tick() {
 		else if(angle > 45)
 			angle_direction = false;
 
-		
-			if(angle_direction)
-				angle += step;
-			else
-				angle -= step; 
+		if(angle_direction)
+			angle += step;
+		else
+			angle -= step; 
 
 		if (step < 8) step += 0.5;
 
@@ -221,10 +223,8 @@ function tick() {
 					victims[n][1] = yy;							
 				} /*else if (is_free_place(xx + dx, yy, victims[n])) {
 					xx += dx;
-					victims[n][2] = Math.PI * 2 * Math.random();	
 				} else if (is_free_place(xx, yy + dy, victims[n])) {
 					yy += dy;
-					victims[n][2] = Math.PI * 2 * Math.random();	
 				}*/ else {
 					// change the dir
 					victims[n][2] = Math.PI * 2 * Math.random();				
@@ -257,10 +257,8 @@ function tick() {
 					enemies[n][1] = yy;							
 				} /*else if (is_free_place(xx + dx, yy, enemies[n])) {
 					xx += dx;
-					enemies[n][2] = Math.PI * 2 * Math.random();		
 				} else if (is_free_place(xx, yy + dy, enemies[n])) {
 					yy += dy;
-					enemies[n][2] = Math.PI * 2 * Math.random();		
 				}*/ else {
 					// change the dir
 					enemies[n][2] = Math.PI * 2 * Math.random();				
