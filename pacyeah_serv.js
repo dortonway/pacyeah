@@ -1,10 +1,14 @@
 var http = require('http');
-var mongo = require('/home/i/node_modules/mongodb');
+try {
+	var mongo = require('/home/i/node_modules/mongodb');
+} catch(err) {
+	var mongo = require('mongodb');
+}
 
-var db = new mongo.Db('pacyeah', mongo.Server('0.0.0.0', mongo.Connection.DEFAULT_PORT), {w: 1});
+var db = new mongo.Db('pacyeah', mongo.Server('127.0.0.1', mongo.Connection.DEFAULT_PORT), {w: 1});
 
 http.createServer(function(request, response) {
-	response.writeHead(200, {'Content-Type': 'text/plain'});
+	response.writeHead(200, {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*'});
 
 	if(request.url.indexOf('gameover') > -1) {
 		var name = request.url.substr(name = request.url.indexOf('&') + 1, (points = request.url.indexOf('=', name)) - name);
@@ -13,16 +17,15 @@ http.createServer(function(request, response) {
 		// db
 		var response_json = {}, i = 0;
 		db.open(function(err, db) {
-			console.log(err);
 			db.collection('rating', function(err, collection) {
 				
-				// insert into db
-				collection.insert({name: name, points: points}, {safe: true}, function(err, records) {
-
-					// read from db and response
+				// modifying data
+				collection.findAndModify({name: name, points: {$lt: Number(points)}}, [], {$set: {points: Number(points)}}, {upsert: true}, function(err, records) {
+				//collection.update({name: name, points: {$lt: Number(points)}}, {$set: {points: Number(points)}}, {upsert: true}, function(err, records) {
 					collection.count(function(err, count) {
-						console.log(err);
-						collection.find(function(err, cursor) {
+
+						// sending response
+						collection.find({}, {}, {'sort': [['points', -1]]}, function(err, cursor) {
 							cursor.each(function(err, item) {
 								if(item != null)
 									response_json[++i] = item;
@@ -33,7 +36,6 @@ http.createServer(function(request, response) {
 							});
 						});
 					});
-					
 				});
 			});
 		});
