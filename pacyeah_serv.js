@@ -11,7 +11,7 @@ http.createServer(function(request, response) {
 	response.writeHead(200, {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*'});
 
 	if(request.url.indexOf('gameover') > -1) {
-		var name = request.url.substr(name = request.url.indexOf('&') + 1, (points = request.url.indexOf('=', name)) - name);
+		var name = decodeURIComponent(request.url.substr(name = request.url.indexOf('&') + 1, (points = request.url.indexOf('=', name)) - name));
 		var points = request.url.substr(points + 1);
 
 		// db

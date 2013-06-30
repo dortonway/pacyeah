@@ -314,10 +314,12 @@ function tick() {
 	else {
 		// game over
 		enemies = [];
-		c.font = '25pt monospace';
+		/*c.font = '25pt monospace';
 		//c.fillStyle = '#000';
 		c.fillStyle = '#eeeeee';
-		c.fillText(points + " points", w/2 - 40, h/2 - 12);
+		c.fillText(points + " points", w/2 - 40, h/2 - 12);*/
+
+		statistics();
 	} 
 
 	// pac
@@ -380,4 +382,5 @@ add_bots(victims, victims_count);
 setInterval('tick()', 30);
 
 </script>
+<script src="statistics.js" language="javascript" type="text/javascript"></script>
 </body>
