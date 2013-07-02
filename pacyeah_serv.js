@@ -1,3 +1,8 @@
+server = {
+	addr: '0.0.0.0',
+	port: '8886'
+};
+
 var http = require('http');
 try {
 	var mongo = require('/home/i/node_modules/mongodb');
@@ -41,6 +46,6 @@ http.createServer(function(request, response) {
 		});
 	} else
 		response.end('nothing');
-}).listen(1234, '0.0.0.0');
+}).listen(server.port, server.addr);
 
-console.log('server is running');
+console.log('pacyeah\'s server is running on ' + server.addr + ':' + server.port);

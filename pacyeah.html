@@ -39,7 +39,7 @@ var w = canvas.width,
 	enemies = [],
 	enemies_count = 10,
 	victims = [],
-	victims_count = 20,
+	victims_live = victims_count = 20,
 	pac = 1, 
 	pac_radius = 22,
 	victim_radius = 20,
@@ -189,7 +189,8 @@ function tick() {
 		for(var n in victims) {
 			if(Math.abs(x - victims[n][0]) < pac_radius && Math.abs(y - victims[n][1]) < pac_radius) {
 				victims.splice(n, 1);
-				points += Math.round(body.clientWidth * body.clientHeight / time);
+				victims_live = victims.length;
+				points += Math.round(10000 / time);
 				time = 0;
 			} else {
 				xx = victims[n][0];
@@ -241,7 +242,7 @@ function tick() {
 				// game over
 				victims = [];
 				enemies = [];
-				points = 0;
+				//points = 0;
 				break;
 			} else {
 				var dx = Math.cos(dir) * step;
@@ -307,7 +308,7 @@ function tick() {
 	c.font = '25pt monospace';
 	//c.fillStyle = '#000';
 	c.fillStyle = '#dddddd';
-	c.fillText(/*victims_count - */victims.length, 14, 40);
+	c.fillText(/*victims_count - */victims_live, 14, 40);
 
 	if (victims.length > 0)
 		time++;
