@@ -10,8 +10,11 @@ function name_input() {
 	document.addEventListener('keypress', input, false);
 
 	name_input.backspace = function(event) {
-		if(event.keyCode == 8)
+		if(event.keyCode == 8) {
+			event.preventDefault();
+
 			input(true, true);
+		}
 	}
 
 	// for hard button 'backspace'
